@@ -1,5 +1,5 @@
 # ===========================
-# ExpenseTracker.py (Final Version with Secure Login, Enter Login, Dismissible Reminder)
+# ExpenseTracker.py (Final Version with Credit Cards and Combined Income)
 # ===========================
 
 import streamlit as st
@@ -19,6 +19,7 @@ DB_FILE = "expense_data.db"
 def create_tables():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    # Transaction table
     c.execute('''
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,16 +28,29 @@ def create_tables():
             month TEXT,
             amount REAL,
             category TEXT,
-            description TEXT
+            description TEXT,
+            card TEXT
         )
     ''')
+    # Savings table
     c.execute('''
         CREATE TABLE IF NOT EXISTS savings (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             amount REAL
         )
     ''')
+    # Credit card limits
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS card_limits (
+            card TEXT PRIMARY KEY,
+            limit REAL
+        )
+    ''')
     c.execute('INSERT OR IGNORE INTO savings (id, amount) VALUES (1, 0)')
+    # Insert credit cards if not exist
+    default_cards = ['RBC', 'Rogers', 'CIBC', 'CIBC Costco']
+    for card in default_cards:
+        c.execute('INSERT OR IGNORE INTO card_limits (card, limit) VALUES (?, ?)', (card, 0))
     conn.commit()
     conn.close()
 
@@ -44,9 +58,9 @@ def add_transaction(trx):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO transactions (type, date, month, amount, category, description)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (trx["type"], trx["date"], trx["month"], trx["amount"], trx["category"], trx["description"]))
+        INSERT INTO transactions (type, date, month, amount, category, description, card)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (trx["type"], trx["date"], trx["month"], trx["amount"], trx["category"], trx["description"], trx["card"]))
     conn.commit()
     conn.close()
 
@@ -84,6 +98,19 @@ def get_savings():
     savings = c.fetchone()[0]
     conn.close()
     return savings
+
+def update_card_limit(card, limit):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('UPDATE card_limits SET limit = ? WHERE card = ?', (limit, card))
+    conn.commit()
+    conn.close()
+
+def get_card_limits():
+    conn = sqlite3.connect(DB_FILE)
+    df = pd.read_sql_query("SELECT * FROM card_limits", conn)
+    conn.close()
+    return df
 
 # Create database tables
 create_tables()
@@ -135,21 +162,24 @@ st.title("Expense Tracker Dashboard")
 # Sidebar
 st.sidebar.header("Add Transactions")
 
-# Add Income
+# Add Income (Jobin + Anna)
 st.sidebar.subheader("Add Income")
-income_amount = st.sidebar.number_input("Income Amount", min_value=0.0, step=0.01)
-if st.sidebar.button("Add Income"):
+jobin_income = st.sidebar.number_input("Jobin Income", min_value=0.0, step=0.01)
+anna_income = st.sidebar.number_input("Anna Income", min_value=0.0, step=0.01)
+if st.sidebar.button("Add Combined Income"):
     today = datetime.date.today()
+    combined_income = jobin_income + anna_income
     trx = {
         "type": "Income",
         "date": today,
         "month": today.strftime("%B %Y"),
-        "amount": income_amount,
+        "amount": combined_income,
         "category": "Income",
-        "description": "Salary / Income"
+        "description": "Jobin + Anna Combined",
+        "card": ""
     }
     add_transaction(trx)
-    st.success(f"Income of ₹{income_amount} added!")
+    st.success(f"Income of ₹{combined_income} added!")
 
 # Add Savings
 st.sidebar.subheader("Set Savings Contribution")
@@ -167,6 +197,7 @@ expense_category = st.sidebar.selectbox("Category", [
     "Investments", "Shopping", "Miscellaneous"
 ])
 expense_description = st.sidebar.text_input("Description (optional)")
+expense_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco"])
 expense_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
 if st.sidebar.button("Add Expense"):
@@ -176,12 +207,32 @@ if st.sidebar.button("Add Expense"):
         "month": expense_date.strftime("%B %Y"),
         "amount": expense_amount,
         "category": expense_category,
-        "description": expense_description
+        "description": expense_description,
+        "card": expense_card if expense_card != "None" else ""
     }
     add_transaction(trx)
-    st.success(f"Expense of ₹{expense_amount} added under {expense_category}!")
+    st.success(f"Expense of ₹{expense_amount} added!")
 
-# Show Transactions
+# Add Credit Card Repayment
+st.sidebar.subheader("Credit Card Repayment")
+repay_card = st.sidebar.selectbox("Repaying Card?", ["RBC", "Rogers", "CIBC", "CIBC Costco"])
+repay_amount = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=0.01)
+
+if st.sidebar.button("Add Repayment"):
+    today = datetime.date.today()
+    trx = {
+        "type": "Repayment",
+        "date": today,
+        "month": today.strftime("%B %Y"),
+        "amount": repay_amount,
+        "category": "Repayment",
+        "description": f"Repayment to {repay_card}",
+        "card": repay_card
+    }
+    add_transaction(trx)
+    st.success(f"Repayment of ₹{repay_amount} added for {repay_card}!")
+
+# Transactions Table
 st.subheader("Transaction History")
 
 df = get_transactions()
@@ -209,26 +260,48 @@ if not df.empty:
 else:
     st.info("No transactions yet!")
 
-# Summary
+# Summary Section
 st.subheader("Summary")
 
 if not df.empty:
     income_total = df[df["type"] == "Income"]["amount"].sum()
     expense_total = df[df["type"] == "Expense"]["amount"].sum()
     savings_total = get_savings()
-    remaining_balance = income_total - savings_total - expense_total
+    repayment_total = df[df["type"] == "Repayment"]["amount"].sum()
+    remaining_balance = income_total - savings_total - expense_total - repayment_total
 
     st.metric("Total Income", f"₹{income_total:,.2f}")
     st.metric("Total Savings", f"₹{savings_total:,.2f}")
     st.metric("Total Expenses", f"₹{expense_total:,.2f}")
+    st.metric("Total Repayments", f"₹{repayment_total:,.2f}")
     st.metric("Remaining Balance", f"₹{remaining_balance:,.2f}")
 
     # Expenses by Category
     st.subheader("Expenses by Category")
     exp_chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
     st.bar_chart(exp_chart)
-else:
-    st.info("No transactions recorded yet.")
+
+# Credit Card Management Section
+st.subheader("Credit Card Management")
+
+card_limits_df = get_card_limits()
+for idx, row in card_limits_df.iterrows():
+    card = row['card']
+    limit = row['limit']
+    spent = df[(df["card"] == card) & (df["type"] == "Expense")]["amount"].sum()
+    repaid = df[(df["card"] == card) & (df["type"] == "Repayment")]["amount"].sum()
+    balance = spent - repaid
+
+    with st.expander(f"💳 {card} (Limit: ₹{limit:,.2f})"):
+        new_limit = st.number_input(f"Set/Update Max Limit for {card}", value=limit, step=100.0, key=f"limit_{card}")
+        if st.button(f"Update Limit {card}", key=f"btn_{card}"):
+            update_card_limit(card, new_limit)
+            st.success(f"Updated {card} Limit to ₹{new_limit:,.2f}")
+            st.rerun()
+
+        st.write(f"**Spent:** ₹{spent:,.2f}")
+        st.write(f"**Repayments Done:** ₹{repaid:,.2f}")
+        st.write(f"**Outstanding Balance:** ₹{balance:,.2f}")
 
 # Download Transactions
 st.subheader("Download Transactions")
