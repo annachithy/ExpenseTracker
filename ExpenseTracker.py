@@ -1,5 +1,5 @@
 # ===========================
-# ExpenseTracker.py (Final Secure Version)
+# ExpenseTracker.py (Final Version with Secure Login, Enter Login, Dismissible Reminder)
 # ===========================
 
 import streamlit as st
@@ -96,26 +96,38 @@ def login(username, password):
     correct_password = st.secrets.credentials.password
     return username == correct_username and password == correct_password
 
-# Initialize login state
+# Initialize login and reminder states
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# Login page
+if "show_reminder" not in st.session_state:
+    st.session_state.show_reminder = True
+
+# Login Page with Form (Enter Key Support)
 if not st.session_state.logged_in:
     st.title("Login to Expense Tracker")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if login(username, password):
-            st.session_state.logged_in = True
-            st.success("Login successful!")
-            st.rerun()
-        else:
-            st.error("Incorrect username or password")
+
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Login")
+
+        if submitted:
+            if login(username, password):
+                st.session_state.logged_in = True
+                st.success("Login successful!")
+                st.rerun()
+            else:
+                st.error("Incorrect username or password")
     st.stop()
 
-# Reminder
-st.info(f"🔔 Reminder: Please record today's expenses! ({datetime.date.today().strftime('%B %d, %Y')})")
+# Reminder with Dismiss Option
+if st.session_state.show_reminder:
+    with st.container():
+        st.info(f"🔔 Reminder: Please record today's expenses! ({datetime.date.today().strftime('%B %d, %Y')})")
+        if st.button("Dismiss Reminder ❌"):
+            st.session_state.show_reminder = False
+            st.rerun()
 
 # Title
 st.title("Expense Tracker Dashboard")
@@ -218,7 +230,7 @@ if not df.empty:
 else:
     st.info("No transactions recorded yet.")
 
-# Download Button
+# Download Transactions
 st.subheader("Download Transactions")
 if st.button("Download CSV"):
     csv = df.to_csv(index=False).encode('utf-8')
