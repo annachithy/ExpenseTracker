@@ -43,7 +43,7 @@ def create_tables():
     c.execute('''
         CREATE TABLE IF NOT EXISTS card_limits (
             card TEXT PRIMARY KEY,
-            limit REAL
+            max_limit REAL
         )
     ''')
     c.execute('INSERT OR IGNORE INTO savings (id, amount) VALUES (1, 0)')
