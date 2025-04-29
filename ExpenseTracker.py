@@ -238,10 +238,11 @@ if not df.empty or savings_total > 0:
     if not chart.empty:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            fig, ax = plt.subplots(figsize=(4, 4))
+            fig, ax = plt.subplots(figsize=(4, 4))   # smaller size
             chart.plot.pie(autopct='%1.1f%%', ax=ax)
-            plt.ylabel("")
-            st.pyplot(fig)
+            plt.ylabel("")  # Remove ylabel
+            plt.tight_layout()  # Reduce extra space
+            st.pyplot(fig, bbox_inches='tight')
 
 
     else:
