@@ -135,33 +135,36 @@ st.title("Expense Tracker Dashboard")
 # -----------------------------
 
 st.sidebar.header("Add Income")
-jobin = st.sidebar.number_input("Jobin Income", min_value=0.0, step=1.0, key="jobin_income")
-if st.sidebar.button("Add Jobin Income"):
-    today = datetime.date.today()
-    add_transaction({
-        "type": "Income",
-        "date": today,
-        "month": today.strftime("%B %Y"),
-        "amount": jobin,
-        "category": "Income",
-        "description": "Jobin Salary",
-        "card": ""
-    })
-    st.sidebar.success(f"₹{jobin} Jobin Income added!")
+with st.sidebar.form("jobin_form"):
+    jobin = st.number_input("Jobin Income", min_value=0.0, step=1.0, key="jobin_income_input")
+    if st.form_submit_button("Add Jobin Income"):
+        today = datetime.date.today()
+        add_transaction({
+            "type": "Income",
+            "date": today,
+            "month": today.strftime("%B %Y"),
+            "amount": jobin,
+            "category": "Income",
+            "description": "Jobin Salary",
+            "card": ""
+        })
+        st.success(f"₹{jobin} Jobin Income added!")
 
-anna = st.sidebar.number_input("Anna Income", min_value=0.0, step=1.0, key="anna_income")
-if st.sidebar.button("Add Anna Income"):
-    today = datetime.date.today()
-    add_transaction({
-        "type": "Income",
-        "date": today,
-        "month": today.strftime("%B %Y"),
-        "amount": anna,
-        "category": "Income",
-        "description": "Anna Salary",
-        "card": ""
-    })
-    st.sidebar.success(f"₹{anna} Anna Income added!")
+with st.sidebar.form("anna_form"):
+    anna = st.number_input("Anna Income", min_value=0.0, step=1.0, key="anna_income_input")
+    if st.form_submit_button("Add Anna Income"):
+        today = datetime.date.today()
+        add_transaction({
+            "type": "Income",
+            "date": today,
+            "month": today.strftime("%B %Y"),
+            "amount": anna,
+            "category": "Income",
+            "description": "Anna Salary",
+            "card": ""
+        })
+        st.success(f"₹{anna} Anna Income added!")
+
 
 st.sidebar.header("Savings")
 add_save = st.sidebar.number_input("Add to Savings", min_value=0.0, step=1.0)
