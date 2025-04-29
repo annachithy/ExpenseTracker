@@ -1,5 +1,3 @@
-# ExpenseTracker.py - FINAL VERSION
-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -40,6 +38,11 @@ def create_tables():
     conn.commit()
     conn.close()
 
+create_tables()
+
+# -----------------------------
+# Database Functions
+# -----------------------------
 def add_transaction(trx):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -95,8 +98,6 @@ def update_card_limit(card, limit):
     conn.commit()
     conn.close()
 
-create_tables()
-
 # -----------------------------
 # Secure Login
 # -----------------------------
@@ -108,6 +109,9 @@ if "logged_in" not in st.session_state:
 
 if "show_reminder" not in st.session_state:
     st.session_state.show_reminder = True
+
+if "income_added" not in st.session_state:
+    st.session_state.income_added = False
 
 if not st.session_state.logged_in:
     st.title("Login to Expense Tracker")
@@ -128,42 +132,45 @@ if st.session_state.show_reminder:
         st.session_state.show_reminder = False
         st.rerun()
 
-st.title("Expense Tracker")
-
+st.title("Expense Tracker Dashboard")
 # -----------------------------
 # Sidebar - Income, Savings, Expense, Repayment
 # -----------------------------
+
 st.sidebar.header("Add Income")
-jobin = st.sidebar.number_input("Jobin Income", min_value=0.0)
-anna = st.sidebar.number_input("Anna Income", min_value=0.0)
-if st.sidebar.button("Add Combined Income"):
-    amt = jobin + anna
+jobin = st.sidebar.number_input("Jobin Income", min_value=0.0, step=1.0)
+anna = st.sidebar.number_input("Anna Income", min_value=0.0, step=1.0)
+if (jobin > 0 or anna > 0) and not st.session_state.income_added:
+    total_income = jobin + anna
     today = datetime.date.today()
     add_transaction({
         "type": "Income", "date": today, "month": today.strftime("%B %Y"),
-        "amount": amt, "category": "Income", "description": "Jobin + Anna", "card": ""
+        "amount": total_income, "category": "Income",
+        "description": "Jobin + Anna Combined", "card": ""
     })
-    st.sidebar.success(f"₹{amt} added.")
+    st.session_state.income_added = True
+    st.sidebar.success(f"₹{total_income} added automatically.")
 
 st.sidebar.header("Savings")
-add_save = st.sidebar.number_input("Add to Savings", min_value=0.0)
+add_save = st.sidebar.number_input("Add to Savings", min_value=0.0, step=1.0)
 if st.sidebar.button("Add Savings"):
     update_savings(add_save)
     st.sidebar.success("Savings updated.")
 
-set_save = st.sidebar.number_input("Set Total Savings", min_value=0.0)
+set_save = st.sidebar.number_input("Set Total Savings", min_value=0.0, step=1.0)
 if st.sidebar.button("Set Savings"):
     set_savings(set_save)
-    st.sidebar.success("Savings value set.")
+    st.sidebar.success("Savings manually set.")
 
 st.sidebar.header("Add Expense")
-e_amt = st.sidebar.number_input("Amount", min_value=0.0)
+e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
 e_cat = st.sidebar.selectbox("Category", ["Food", "Grocery", "Rent", "Utilities", "Education",
                                           "Transportation", "Medical", "Entertainment", "Insurance",
                                           "Investments", "Shopping", "Miscellaneous"])
-e_desc = st.sidebar.text_input("Description")
+e_desc = st.sidebar.text_input("Expense Description")
 e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart"])
-e_date = st.sidebar.date_input("Date", datetime.date.today())
+e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
+
 if st.sidebar.button("Add Expense"):
     add_transaction({
         "type": "Expense", "date": e_date, "month": e_date.strftime("%B %Y"),
@@ -172,52 +179,24 @@ if st.sidebar.button("Add Expense"):
     })
     st.sidebar.success("Expense added.")
 
-st.sidebar.header("Card Repayment")
+st.sidebar.header("Credit Card Repayment")
 rep_card = st.sidebar.selectbox("Repayment Card", ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart"])
-rep_amt = st.sidebar.number_input("Repayment Amount", min_value=0.0)
+rep_amt = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=1.0)
 if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
     add_transaction({
         "type": "Repayment", "date": today, "month": today.strftime("%B %Y"),
-        "amount": rep_amt, "category": "Repayment", "description": f"To {rep_card}",
+        "amount": rep_amt, "category": "Repayment", "description": f"Repayment to {rep_card}",
         "card": rep_card
     })
-    st.sidebar.success("Repayment recorded.")
-
-# -----------------------------
-# Transaction History (with Edit and Delete)
-# -----------------------------
-st.subheader("Transaction History")
-
-df = get_transactions()
-if not df.empty:
-    st.dataframe(df)
-
-    for i, row in df.iterrows():
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button(f"✏️ Edit {row['id']}"):
-                with st.form(f"edit_form_{row['id']}"):
-                    new_amt = st.number_input("New Amount", value=row['amount'])
-                    new_desc = st.text_input("New Description", value=row['description'])
-                    submit_edit = st.form_submit_button("Update Transaction")
-                    if submit_edit:
-                        update_transaction(row['id'], new_amt, new_desc)
-                        st.success("Transaction updated!")
-                        st.rerun()
-        with col2:
-            if st.button(f"🗑️ Delete {row['id']}"):
-                delete_transaction(row['id'])
-                st.success("Transaction deleted!")
-                st.rerun()
-else:
-    st.info("No transactions yet.")
+    st.sidebar.success("Repayment added.")
 
 # -----------------------------
 # Dashboard Summary
 # -----------------------------
-st.subheader("Summary")
+df = get_transactions()
 
+st.subheader("Summary Dashboard")
 if not df.empty:
     income_total = df[df["type"] == "Income"]["amount"].sum()
     expense_total = df[df["type"] == "Expense"]["amount"].sum()
@@ -226,47 +205,89 @@ if not df.empty:
     balance = income_total - expense_total - repayment_total
 
     st.metric("Total Income", f"₹{income_total:,.2f}")
-    st.metric("Total Savings", f"₹{savings_total:,.2f}")
     st.metric("Total Expenses", f"₹{expense_total:,.2f}")
     st.metric("Total Repayments", f"₹{repayment_total:,.2f}")
+    st.metric("Total Savings", f"₹{savings_total:,.2f}")
     st.metric("Remaining Balance", f"₹{balance:,.2f}")
 
-    st.subheader("Expenses by Category")
+    st.subheader("Expenses by Category (Pie Chart)")
     chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
-    st.bar_chart(chart)
+    st.pyplot(chart.plot.pie(autopct='%1.1f%%', figsize=(6, 6)).figure)
 
 # -----------------------------
-# Credit Card Dashboard
+# Transaction History (Edit/Delete)
 # -----------------------------
-st.subheader("Credit Card Summary")
+st.subheader("Transaction History")
 
+if not df.empty:
+    for i, row in df.iterrows():
+        col1, col2, col3, col4 = st.columns([4, 4, 1, 1])
+        with col1:
+            st.write(f"₹{row['amount']} | {row['category']} | {row['description']} | {row['date']}")
+        with col2:
+            st.write(f"Card: {row['card']}")
+        with col3:
+            if st.button(f"✏️ Edit {row['id']}"):
+                with st.form(f"edit_form_{row['id']}"):
+                    new_amt = st.number_input("New Amount", value=row['amount'])
+                    new_desc = st.text_input("New Description", value=row['description'])
+                    submit = st.form_submit_button("Update")
+                    if submit:
+                        update_transaction(row['id'], new_amt, new_desc)
+                        st.success("Transaction Updated!")
+                        st.rerun()
+        with col4:
+            if st.button(f"🗑️ Delete {row['id']}"):
+                delete_transaction(row['id'])
+                st.success("Transaction Deleted!")
+                st.rerun()
+else:
+    st.info("No transactions yet.")
+
+# -----------------------------
+# Credit Card Summary
+# -----------------------------
+st.subheader("Credit Card Dashboard")
 card_limits = get_card_limits()
+
 for _, row in card_limits.iterrows():
     card = row["card"]
     limit = row["max_limit"]
     spent = df[(df["card"] == card) & (df["type"] == "Expense")]["amount"].sum()
-    paid = df[(df["card"] == card) & (df["type"] == "Repayment")]["amount"].sum()
-    balance = spent - paid
+    repaid = df[(df["card"] == card) & (df["type"] == "Repayment")]["amount"].sum()
+    balance = spent - repaid
     available = limit - balance
 
     with st.expander(f"💳 {card}"):
-        new_limit = st.number_input(f"{card} - Max Limit", value=limit, key=f"limit_{card}")
+        new_limit = st.number_input(f"{card} Max Limit", value=limit, key=f"limit_{card}")
         if st.button(f"Update {card} Limit", key=f"btn_{card}"):
             update_card_limit(card, new_limit)
-            st.success(f"{card} limit updated.")
+            st.success(f"Limit for {card} updated.")
             st.rerun()
-
         st.write(f"**Spent:** ₹{spent:.2f}")
-        st.write(f"**Paid:** ₹{paid:.2f}")
+        st.write(f"**Repaid:** ₹{repaid:.2f}")
         st.write(f"**Outstanding Balance:** ₹{balance:.2f}")
         st.write(f"**Available Credit:** ₹{available:.2f}")
         if limit > 0:
-            st.progress(min(spent / limit, 1.0))
+            st.progress(min(spent/limit, 1.0))
+
+# -----------------------------
+# Soft Reset
+# -----------------------------
+st.subheader("Reset Transactions")
+if st.button("Reset All Transactions"):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('DELETE FROM transactions')
+    conn.commit()
+    conn.close()
+    st.success("All transactions deleted!")
+    st.rerun()
 
 # -----------------------------
 # Download CSV
 # -----------------------------
-st.subheader("Download Records")
-if st.button("Download CSV"):
+st.subheader("Download Transactions")
+if not df.empty:
     csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button("Download File", csv, "transactions.csv", "text/csv")
+    st.download_button("Download CSV File", csv, "transactions.csv", "text/csv")
