@@ -4,7 +4,6 @@ import sqlite3
 import datetime
 import matplotlib.pyplot as plt
 
-
 st.set_page_config(page_title="Expense Tracker", layout="wide")
 DB_FILE = "expense_data.db"
 
@@ -99,19 +98,16 @@ def update_card_limit(card, limit):
     c.execute('UPDATE card_limits SET max_limit = ? WHERE card = ?', (limit, card))
     conn.commit()
     conn.close()
-
 # -----------------------------
-# Secure Login
+# Secure Login and Session Setup
 # -----------------------------
 def login(username, password):
     return username == st.secrets.credentials.username and password == st.secrets.credentials.password
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
 if "show_reminder" not in st.session_state:
     st.session_state.show_reminder = True
-
 if "income_added" not in st.session_state:
     st.session_state.income_added = False
 
@@ -135,10 +131,10 @@ if st.session_state.show_reminder:
         st.rerun()
 
 st.title("Expense Tracker Dashboard")
-# -----------------------------
-# Sidebar - Income, Savings, Expense, Repayment
-# -----------------------------
 
+# -----------------------------
+# Sidebar - Add Income, Savings, Expense, Repayment
+# -----------------------------
 st.sidebar.header("Add Income")
 jobin = st.sidebar.number_input("Jobin Income", min_value=0.0, step=1.0)
 anna = st.sidebar.number_input("Anna Income", min_value=0.0, step=1.0)
@@ -188,8 +184,8 @@ if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
     add_transaction({
         "type": "Repayment", "date": today, "month": today.strftime("%B %Y"),
-        "amount": rep_amt, "category": "Repayment", "description": f"Repayment to {rep_card}",
-        "card": rep_card
+        "amount": rep_amt, "category": "Repayment",
+        "description": f"Repayment to {rep_card}", "card": rep_card
     })
     st.sidebar.success("Repayment added.")
 
@@ -199,6 +195,7 @@ if st.sidebar.button("Add Repayment"):
 df = get_transactions()
 
 st.subheader("Summary Dashboard")
+
 if not df.empty:
     income_total = df[df["type"] == "Income"]["amount"].sum()
     expense_total = df[df["type"] == "Expense"]["amount"].sum()
@@ -214,7 +211,12 @@ if not df.empty:
 
     st.subheader("Expenses by Category (Pie Chart)")
     chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
-    st.pyplot(chart.plot.pie(autopct='%1.1f%%', figsize=(6, 6)).figure)
+    if not chart.empty:
+        fig, ax = plt.subplots()
+        chart.plot.pie(autopct='%1.1f%%', ax=ax)
+        st.pyplot(fig)
+    else:
+        st.info("No expenses yet to plot.")
 
 # -----------------------------
 # Transaction History (Edit/Delete)
@@ -247,27 +249,27 @@ else:
     st.info("No transactions yet.")
 
 # -----------------------------
-# Credit Card Summary
+# Credit Card Dashboard
 # -----------------------------
-st.subheader("Credit Card Dashboard")
+st.subheader("Credit Card Summary")
 card_limits = get_card_limits()
 
 for _, row in card_limits.iterrows():
     card = row["card"]
     limit = row["max_limit"]
     spent = df[(df["card"] == card) & (df["type"] == "Expense")]["amount"].sum()
-    repaid = df[(df["card"] == card) & (df["type"] == "Repayment")]["amount"].sum()
-    balance = spent - repaid
+    paid = df[(df["card"] == card) & (df["type"] == "Repayment")]["amount"].sum()
+    balance = spent - paid
     available = limit - balance
 
     with st.expander(f"💳 {card}"):
         new_limit = st.number_input(f"{card} Max Limit", value=limit, key=f"limit_{card}")
         if st.button(f"Update {card} Limit", key=f"btn_{card}"):
             update_card_limit(card, new_limit)
-            st.success(f"Limit for {card} updated.")
+            st.success(f"{card} limit updated.")
             st.rerun()
         st.write(f"**Spent:** ₹{spent:.2f}")
-        st.write(f"**Repaid:** ₹{repaid:.2f}")
+        st.write(f"**Repaid:** ₹{paid:.2f}")
         st.write(f"**Outstanding Balance:** ₹{balance:.2f}")
         st.write(f"**Available Credit:** ₹{available:.2f}")
         if limit > 0:
