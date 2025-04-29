@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import datetime
+import matplotlib.pyplot as plt
+
 
 st.set_page_config(page_title="Expense Tracker", layout="wide")
 DB_FILE = "expense_data.db"
