@@ -236,10 +236,11 @@ if not df.empty or savings_total > 0:
     st.subheader("Expenses by Category (Pie Chart)")
     chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
     if not chart.empty:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(4, 4))  # reduce from (6,6) to (4,4)
         chart.plot.pie(autopct='%1.1f%%', ax=ax)
-        plt.ylabel('')
+        plt.ylabel("")  # remove label
         st.pyplot(fig)
+
     else:
         st.info("No expenses yet to plot.")
 
