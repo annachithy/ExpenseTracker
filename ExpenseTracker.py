@@ -333,6 +333,51 @@ else:
     st.info("No transactions yet.")
 
 # -----------------------------
+# Edit/Delete by Date Section
+# -----------------------------
+st.subheader("Edit or Delete Transactions by Date")
+
+if not df.empty:
+    selected_date = st.date_input("Select a date to view/edit transactions", datetime.date.today())
+    df_selected = df[df['date'] == str(selected_date)]
+
+    if not df_selected.empty:
+        for i, row in df_selected.iterrows():
+            col1, col2, col3, col4 = st.columns([4, 4, 1, 1])
+            with col1:
+                st.write(f"₹{row['amount']} | {row['category']} | {row['description']} | {row['date']}")
+            with col2:
+                st.write(f"Card: {row['card']}")
+            with col3:
+                if st.button(f"✏️ Edit {row['id']}_date"):
+                    st.session_state[f"edit_mode_date_{row['id']}"] = True
+            with col4:
+                if st.button(f"🗑️ Delete {row['id']}_date"):
+                    delete_transaction(row['id'])
+                    st.success("Transaction Deleted!")
+                    st.rerun()
+
+            if st.session_state.get(f"edit_mode_date_{row['id']}", False):
+                with st.form(f"edit_form_date_{row['id']}"):
+                    new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_date_{row['id']}")
+                    new_desc = st.text_input("New Description", value=row['description'], key=f"desc_date_{row['id']}")
+                    col_save, col_cancel = st.columns(2)
+                    with col_save:
+                        if st.form_submit_button("Update"):
+                            update_transaction(row['id'], new_amt, new_desc)
+                            st.success("Transaction Updated!")
+                            st.session_state[f"edit_mode_date_{row['id']}"] = False
+                            st.rerun()
+                    with col_cancel:
+                        if st.form_submit_button("Cancel"):
+                            st.session_state[f"edit_mode_date_{row['id']}"] = False
+                            st.rerun()
+    else:
+        st.info("No transactions found on this date.")
+else:
+    st.info("No transactions to edit yet.")
+
+# -----------------------------
 # Credit Card Dashboard
 # -----------------------------
 st.subheader("Credit Card Summary")
