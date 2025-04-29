@@ -218,21 +218,20 @@ if st.sidebar.button("Add Repayment"):
 # Dashboard Summary
 # -----------------------------
 df = get_transactions()
+savings_total = get_savings()
 
-st.subheader("Summary Dashboard")
-
-if not df.empty:
+if not df.empty or savings_total > 0:
     income_total = df[df["type"] == "Income"]["amount"].sum()
     expense_total = df[df["type"] == "Expense"]["amount"].sum()
-    repayment_total = df[df["type"] == "Repayment"]["amount"].sum()
-    savings_total = get_savings()
-    balance = income_total - expense_total - repayment_total
+    balance = income_total - expense_total
 
-    st.metric("Total Income", f"₹{income_total:,.2f}")
-    st.metric("Total Expenses", f"₹{expense_total:,.2f}")
-    st.metric("Total Repayments", f"₹{repayment_total:,.2f}")
-    st.metric("Total Savings", f"₹{savings_total:,.2f}")
-    st.metric("Remaining Balance", f"₹{balance:,.2f}")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Income", f"₹{income_total:,.2f}")
+    col2.metric("Total Expenses", f"₹{expense_total:,.2f}")
+    col3.metric("Total Savings", f"₹{savings_total:,.2f}")
+    col4.metric("Remaining Balance", f"₹{balance:,.2f}")
+
+
 
     st.subheader("Expenses by Category (Pie Chart)")
     chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
