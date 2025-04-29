@@ -108,8 +108,6 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "show_reminder" not in st.session_state:
     st.session_state.show_reminder = True
-if "income_added" not in st.session_state:
-    st.session_state.income_added = False
 
 if not st.session_state.logged_in:
     st.title("Login to Expense Tracker")
@@ -135,19 +133,35 @@ st.title("Expense Tracker Dashboard")
 # -----------------------------
 # Sidebar - Add Income, Savings, Expense, Repayment
 # -----------------------------
+
 st.sidebar.header("Add Income")
-jobin = st.sidebar.number_input("Jobin Income", min_value=0.0, step=1.0)
-anna = st.sidebar.number_input("Anna Income", min_value=0.0, step=1.0)
-if (jobin > 0 or anna > 0) and not st.session_state.income_added:
-    total_income = jobin + anna
+jobin = st.sidebar.number_input("Jobin Income", min_value=0.0, step=1.0, key="jobin_income")
+if st.sidebar.button("Add Jobin Income"):
     today = datetime.date.today()
     add_transaction({
-        "type": "Income", "date": today, "month": today.strftime("%B %Y"),
-        "amount": total_income, "category": "Income",
-        "description": "Jobin + Anna Combined", "card": ""
+        "type": "Income",
+        "date": today,
+        "month": today.strftime("%B %Y"),
+        "amount": jobin,
+        "category": "Income",
+        "description": "Jobin Salary",
+        "card": ""
     })
-    st.session_state.income_added = True
-    st.sidebar.success(f"₹{total_income} added automatically.")
+    st.sidebar.success(f"₹{jobin} Jobin Income added!")
+
+anna = st.sidebar.number_input("Anna Income", min_value=0.0, step=1.0, key="anna_income")
+if st.sidebar.button("Add Anna Income"):
+    today = datetime.date.today()
+    add_transaction({
+        "type": "Income",
+        "date": today,
+        "month": today.strftime("%B %Y"),
+        "amount": anna,
+        "category": "Income",
+        "description": "Anna Salary",
+        "card": ""
+    })
+    st.sidebar.success(f"₹{anna} Anna Income added!")
 
 st.sidebar.header("Savings")
 add_save = st.sidebar.number_input("Add to Savings", min_value=0.0, step=1.0)
@@ -171,8 +185,12 @@ e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
 if st.sidebar.button("Add Expense"):
     add_transaction({
-        "type": "Expense", "date": e_date, "month": e_date.strftime("%B %Y"),
-        "amount": e_amt, "category": e_cat, "description": e_desc,
+        "type": "Expense",
+        "date": e_date,
+        "month": e_date.strftime("%B %Y"),
+        "amount": e_amt,
+        "category": e_cat,
+        "description": e_desc,
         "card": e_card if e_card != "None" else ""
     })
     st.sidebar.success("Expense added.")
@@ -183,9 +201,13 @@ rep_amt = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=1.0)
 if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
     add_transaction({
-        "type": "Repayment", "date": today, "month": today.strftime("%B %Y"),
-        "amount": rep_amt, "category": "Repayment",
-        "description": f"Repayment to {rep_card}", "card": rep_card
+        "type": "Repayment",
+        "date": today,
+        "month": today.strftime("%B %Y"),
+        "amount": rep_amt,
+        "category": "Repayment",
+        "description": f"Repayment to {rep_card}",
+        "card": rep_card
     })
     st.sidebar.success("Repayment added.")
 
@@ -214,12 +236,13 @@ if not df.empty:
     if not chart.empty:
         fig, ax = plt.subplots()
         chart.plot.pie(autopct='%1.1f%%', ax=ax)
+        plt.ylabel('')
         st.pyplot(fig)
     else:
         st.info("No expenses yet to plot.")
 
 # -----------------------------
-# Transaction History (Edit/Delete)
+# Transaction History (Edit/Delete/Cancel)
 # -----------------------------
 st.subheader("Transaction History")
 
@@ -232,19 +255,29 @@ if not df.empty:
             st.write(f"Card: {row['card']}")
         with col3:
             if st.button(f"✏️ Edit {row['id']}"):
-                with st.form(f"edit_form_{row['id']}"):
-                    new_amt = st.number_input("New Amount", value=row['amount'])
-                    new_desc = st.text_input("New Description", value=row['description'])
-                    submit = st.form_submit_button("Update")
-                    if submit:
-                        update_transaction(row['id'], new_amt, new_desc)
-                        st.success("Transaction Updated!")
-                        st.rerun()
+                st.session_state[f"edit_mode_{row['id']}"] = True
         with col4:
             if st.button(f"🗑️ Delete {row['id']}"):
                 delete_transaction(row['id'])
                 st.success("Transaction Deleted!")
                 st.rerun()
+
+        if st.session_state.get(f"edit_mode_{row['id']}", False):
+            with st.form(f"edit_form_{row['id']}"):
+                new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_{row['id']}")
+                new_desc = st.text_input("New Description", value=row['description'], key=f"desc_{row['id']}")
+                col_save, col_cancel = st.columns(2)
+                with col_save:
+                    if st.form_submit_button("Update"):
+                        update_transaction(row['id'], new_amt, new_desc)
+                        st.success("Transaction Updated!")
+                        st.session_state[f"edit_mode_{row['id']}"] = False
+                        st.rerun()
+                with col_cancel:
+                    if st.form_submit_button("Cancel"):
+                        st.session_state[f"edit_mode_{row['id']}"] = False
+                        st.rerun()
+
 else:
     st.info("No transactions yet.")
 
