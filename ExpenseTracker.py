@@ -1,5 +1,5 @@
 # ===========================
-# ExpenseTracker.py (Final Version with Credit Cards and Combined Income)
+# ExpenseTracker.py (Final Corrected Version)
 # ===========================
 
 import streamlit as st
@@ -19,7 +19,6 @@ DB_FILE = "expense_data.db"
 def create_tables():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # Transaction table
     c.execute('''
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,14 +31,12 @@ def create_tables():
             card TEXT
         )
     ''')
-    # Savings table
     c.execute('''
         CREATE TABLE IF NOT EXISTS savings (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             amount REAL
         )
     ''')
-    # Credit card limits
     c.execute('''
         CREATE TABLE IF NOT EXISTS card_limits (
             card TEXT PRIMARY KEY,
@@ -47,10 +44,9 @@ def create_tables():
         )
     ''')
     c.execute('INSERT OR IGNORE INTO savings (id, amount) VALUES (1, 0)')
-    # Insert credit cards if not exist
     default_cards = ['RBC', 'Rogers', 'CIBC', 'CIBC Costco']
     for card in default_cards:
-        c.execute('INSERT OR IGNORE INTO card_limits (card, limit) VALUES (?, ?)', (card, 0))
+        c.execute('INSERT OR IGNORE INTO card_limits (card, max_limit) VALUES (?, ?)', (card, 0))
     conn.commit()
     conn.close()
 
@@ -99,10 +95,10 @@ def get_savings():
     conn.close()
     return savings
 
-def update_card_limit(card, limit):
+def update_card_limit(card, max_limit):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('UPDATE card_limits SET limit = ? WHERE card = ?', (limit, card))
+    c.execute('UPDATE card_limits SET max_limit = ? WHERE card = ?', (max_limit, card))
     conn.commit()
     conn.close()
 
@@ -130,7 +126,7 @@ if "logged_in" not in st.session_state:
 if "show_reminder" not in st.session_state:
     st.session_state.show_reminder = True
 
-# Login Page with Form (Enter Key Support)
+# Login Page
 if not st.session_state.logged_in:
     st.title("Login to Expense Tracker")
 
@@ -148,7 +144,7 @@ if not st.session_state.logged_in:
                 st.error("Incorrect username or password")
     st.stop()
 
-# Reminder with Dismiss Option
+# Reminder
 if st.session_state.show_reminder:
     with st.container():
         st.info(f"🔔 Reminder: Please record today's expenses! ({datetime.date.today().strftime('%B %d, %Y')})")
@@ -213,11 +209,10 @@ if st.sidebar.button("Add Expense"):
     add_transaction(trx)
     st.success(f"Expense of ₹{expense_amount} added!")
 
-# Add Credit Card Repayment
+# Add Repayment
 st.sidebar.subheader("Credit Card Repayment")
 repay_card = st.sidebar.selectbox("Repaying Card?", ["RBC", "Rogers", "CIBC", "CIBC Costco"])
 repay_amount = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=0.01)
-
 if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
     trx = {
@@ -281,19 +276,19 @@ if not df.empty:
     exp_chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
     st.bar_chart(exp_chart)
 
-# Credit Card Management Section
+# Credit Card Management
 st.subheader("Credit Card Management")
 
 card_limits_df = get_card_limits()
 for idx, row in card_limits_df.iterrows():
     card = row['card']
-    limit = row['limit']
+    max_limit = row['max_limit']
     spent = df[(df["card"] == card) & (df["type"] == "Expense")]["amount"].sum()
     repaid = df[(df["card"] == card) & (df["type"] == "Repayment")]["amount"].sum()
     balance = spent - repaid
 
-    with st.expander(f"💳 {card} (Limit: ₹{limit:,.2f})"):
-        new_limit = st.number_input(f"Set/Update Max Limit for {card}", value=limit, step=100.0, key=f"limit_{card}")
+    with st.expander(f"💳 {card} (Limit: ₹{max_limit:,.2f})"):
+        new_limit = st.number_input(f"Set/Update Max Limit for {card}", value=max_limit, step=100.0, key=f"limit_{card}")
         if st.button(f"Update Limit {card}", key=f"btn_{card}"):
             update_card_limit(card, new_limit)
             st.success(f"Updated {card} Limit to ₹{new_limit:,.2f}")
