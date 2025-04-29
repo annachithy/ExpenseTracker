@@ -367,10 +367,12 @@ if st.button("Reset All Transactions"):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('DELETE FROM transactions')
+    c.execute('UPDATE savings SET amount = 0 WHERE id = 1')
     conn.commit()
     conn.close()
-    st.success("All transactions deleted!")
+    st.success("All transactions and savings reset!")
     st.rerun()
+
 
 # -----------------------------
 # Download CSV
