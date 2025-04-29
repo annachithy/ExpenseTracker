@@ -246,6 +246,51 @@ if not df.empty or savings_total > 0:
 
     else:
         st.info("No expenses yet to plot.")
+        
+# -----------------------------
+# Monthly Report Section
+# -----------------------------
+st.subheader("Monthly Report")
+
+# Step 1: Get available months
+available_months = df['month'].unique().tolist()
+
+if available_months:
+    selected_month = st.selectbox("Select Month for Report", sorted(available_months))
+
+    # Step 2: Filter by selected month
+    df_month = df[df['month'] == selected_month]
+
+    # Step 3: Monthly Summary
+    income_total = df_month[df_month["type"] == "Income"]["amount"].sum()
+    expense_total = df_month[df_month["type"] == "Expense"]["amount"].sum()
+    balance = income_total - expense_total
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Monthly Income", f"₹{income_total:,.2f}")
+    col2.metric("Monthly Expenses", f"₹{expense_total:,.2f}")
+    col3.metric("Monthly Balance", f"₹{balance:,.2f}")
+
+    # Step 4: Pie Chart for Month
+    monthly_chart = df_month[df_month["type"] == "Expense"].groupby("category")["amount"].sum()
+    if not monthly_chart.empty:
+        fig, ax = plt.subplots(figsize=(4, 4))
+        monthly_chart.plot.pie(autopct='%1.1f%%', ax=ax)
+        plt.ylabel("")
+        st.pyplot(fig, bbox_inches='tight')
+    else:
+        st.info("No expenses recorded for this month.")
+
+    # Step 5: Download Monthly CSV
+    csv_month = df_month.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label=f"Download {selected_month} Report (CSV)",
+        data=csv_month,
+        file_name=f"{selected_month.replace(' ', '_')}_report.csv",
+        mime="text/csv"
+    )
+else:
+    st.info("No transactions available yet for Monthly Report.")
 
 # -----------------------------
 # Transaction History (Edit/Delete/Cancel)
