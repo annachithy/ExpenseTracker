@@ -187,21 +187,20 @@ with st.sidebar.form("izaak_form"):
 
 
 st.sidebar.header("Savings")
-add_save = st.sidebar.number_input("Add to Savings", min_value=0.0, step=1.0)
-if st.sidebar.button("Add Savings"):
-    update_savings(add_save)
-    st.sidebar.success("Savings updated.")
 
+# Add to savings
+with st.sidebar.form("add_savings_form"):
+    add_save = st.number_input("Add to Savings", min_value=0.0, step=1.0)
+    if st.form_submit_button("Add Savings"):
+        update_savings(add_save)
+        st.sidebar.success(f"₹{add_save} added to savings.")
+
+# Set savings (but we’ll treat it like Add here)
 with st.sidebar.form("set_savings_form"):
-    set_save = st.number_input("Set Total Savings", min_value=0.0, step=1.0, key="set_savings_input")
-    if st.form_submit_button("Set Savings"):
-        current = get_savings()
-        if current > 0:
-            st.warning(f"You already have ₹{current:.2f} in savings. Cannot overwrite.")
-        else:
-            set_savings(set_save)
-            st.success(f"Savings set to ₹{set_save:,.2f}")
-
+    set_save = st.number_input("Also Add to Savings", min_value=0.0, step=1.0, key="set_savings_input")
+    if st.form_submit_button("Add This Too"):
+        update_savings(set_save)  # ✅ Use update, NOT set
+        st.sidebar.success(f"₹{set_save} added to savings.")
 
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
