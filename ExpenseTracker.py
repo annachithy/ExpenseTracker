@@ -284,46 +284,6 @@ else:
     st.info("No transactions available yet for Monthly Report.")
 
 # -----------------------------
-# Transaction History (Edit/Delete/Cancel)
-# -----------------------------
-st.subheader("Transaction History")
-
-if not df.empty:
-    for i, row in df.iterrows():
-        col1, col2, col3, col4 = st.columns([4, 4, 1, 1])
-        with col1:
-            st.write(f"₹{row['amount']} | {row['category']} | {row['description']} | {row['date']}")
-        with col2:
-            st.write(f"Card: {row['card']}")
-        with col3:
-            if st.button("✏️ Edit", key=f"edit_button_history_{row['id']}"):
-                st.session_state[f"edit_mode_{row['id']}"] = True
-            
-            if st.button("🗑️ Delete", key=f"delete_button_history_{row['id']}"):
-                delete_transaction(row['id'])
-                st.success("Transaction Deleted!")
-                st.rerun()
-
-        if st.session_state.get(f"edit_mode_{row['id']}", False):
-            with st.form(f"edit_form_{row['id']}"):
-                new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_history_{row['id']}")
-                new_desc = st.text_input("New Description", value=row['description'], key=f"desc_history_{row['id']}")
-                col_save, col_cancel = st.columns(2)
-                with col_save:
-                    if st.form_submit_button("Update"):
-                        update_transaction(row['id'], new_amt, new_desc)
-                        st.success("Transaction Updated!")
-                        st.session_state[f"edit_mode_{row['id']}"] = False
-                        st.rerun()
-                with col_cancel:
-                    if st.form_submit_button("Cancel"):
-                        st.session_state[f"edit_mode_{row['id']}"] = False
-                        st.rerun()
-
-else:
-    st.info("No transactions yet.")
-
-# -----------------------------
 # Edit/Delete by Date Section
 # -----------------------------
 st.subheader("Edit or Delete Transactions by Date")
