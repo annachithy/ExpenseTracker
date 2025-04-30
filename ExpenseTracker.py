@@ -296,18 +296,18 @@ if not df.empty:
         with col2:
             st.write(f"Card: {row['card']}")
         with col3:
-            if st.button(f"✏️ Edit {row['id']}"):
+            if st.button("✏️ Edit", key=f"edit_button_history_{row['id']}"):
                 st.session_state[f"edit_mode_{row['id']}"] = True
-        with col4:
-            if st.button(f"🗑️ Delete {row['id']}"):
+            
+            if st.button("🗑️ Delete", key=f"delete_button_history_{row['id']}"):
                 delete_transaction(row['id'])
                 st.success("Transaction Deleted!")
                 st.rerun()
 
         if st.session_state.get(f"edit_mode_{row['id']}", False):
             with st.form(f"edit_form_{row['id']}"):
-                new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_{row['id']}")
-                new_desc = st.text_input("New Description", value=row['description'], key=f"desc_{row['id']}")
+                 new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_history_{row['id']}")
+                 new_desc = st.text_input("New Description", value=row['description'], key=f"desc_history_{row['id']}")
                 col_save, col_cancel = st.columns(2)
                 with col_save:
                     if st.form_submit_button("Update"):
