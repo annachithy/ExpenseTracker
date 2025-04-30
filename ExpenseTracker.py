@@ -193,8 +193,8 @@ if st.sidebar.button("Add Savings"):
      update_savings(add_save)
      st.sidebar.success("Savings updated.")
  
- set_save = st.sidebar.number_input("Set Total Savings", min_value=0.0, step=1.0)
- if st.sidebar.button("Set Savings"):
+set_save = st.sidebar.number_input("Set Total Savings", min_value=0.0, step=1.0)
+if st.sidebar.button("Set Savings"):
      set_savings(set_save)
      st.sidebar.success("Savings manually set.")
 
