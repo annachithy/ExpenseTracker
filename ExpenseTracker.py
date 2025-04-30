@@ -34,7 +34,7 @@ def create_tables():
         )
     ''')
     c.execute('INSERT OR IGNORE INTO savings (id, amount) VALUES (1, 0)')
-    for card in ['RBC', 'Rogers', 'CIBC', 'CIBC Costco', 'Walmart']:
+    for card in ['RBC', 'Rogers', 'CIBC', 'CIBC Costco', 'Walmart', 'Triangle']:
         c.execute('INSERT OR IGNORE INTO card_limits (card, max_limit) VALUES (?, ?)', (card, 0))
     conn.commit()
     conn.close()
@@ -183,7 +183,7 @@ e_cat = st.sidebar.selectbox("Category", ["Food", "Grocery", "Rent", "Utilities"
                                           "Transportation", "Medical", "Entertainment", "Insurance",
                                           "Investments", "Shopping", "Miscellaneous"])
 e_desc = st.sidebar.text_input("Expense Description")
-e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart"])
+e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle"])
 e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
 if st.sidebar.button("Add Expense"):
@@ -199,7 +199,7 @@ if st.sidebar.button("Add Expense"):
     st.sidebar.success("Expense added.")
 
 st.sidebar.header("Credit Card Repayment")
-rep_card = st.sidebar.selectbox("Repayment Card", ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart"])
+rep_card = st.sidebar.selectbox("Repayment Card", ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle"])
 rep_amt = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=1.0)
 if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
@@ -272,17 +272,7 @@ if available_months:
     col2.metric("Monthly Expenses", f"₹{expense_total:,.2f}")
     col3.metric("Monthly Balance", f"₹{balance:,.2f}")
 
-    # Step 4: Pie Chart for Month
-    monthly_chart = df_month[df_month["type"] == "Expense"].groupby("category")["amount"].sum()
-    if not monthly_chart.empty:
-        fig, ax = plt.subplots(figsize=(4, 4))
-        monthly_chart.plot.pie(autopct='%1.1f%%', ax=ax)
-        plt.ylabel("")
-        st.pyplot(fig, bbox_inches='tight')
-    else:
-        st.info("No expenses recorded for this month.")
-
-    # Step 5: Download Monthly CSV
+    # Step 4: Download Monthly CSV
     csv_month = df_month.to_csv(index=False).encode('utf-8')
     st.download_button(
         label=f"Download {selected_month} Report (CSV)",
