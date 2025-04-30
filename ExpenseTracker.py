@@ -135,6 +135,8 @@ st.title("Expense Tracker Dashboard")
 # -----------------------------
 
 st.sidebar.header("Add Income")
+
+# Jobin
 with st.sidebar.form("jobin_form"):
     jobin = st.number_input("Jobin Income", min_value=0.0, step=1.0, key="jobin_income_input")
     if st.form_submit_button("Add Jobin Income"):
@@ -148,8 +150,9 @@ with st.sidebar.form("jobin_form"):
             "description": "Jobin Salary",
             "card": ""
         })
-        st.success(f"₹{jobin} Jobin Income added!")
+        st.sidebar.success(f"₹{jobin} Jobin Income added!")
 
+# Anna
 with st.sidebar.form("anna_form"):
     anna = st.number_input("Anna Income", min_value=0.0, step=1.0, key="anna_income_input")
     if st.form_submit_button("Add Anna Income"):
@@ -163,7 +166,24 @@ with st.sidebar.form("anna_form"):
             "description": "Anna Salary",
             "card": ""
         })
-        st.success(f"₹{anna} Anna Income added!")
+        st.sidebar.success(f"₹{anna} Anna Income added!")
+
+# Izaak
+with st.sidebar.form("izaak_form"):
+    izaak = st.number_input("Izaak Income", min_value=0.0, step=1.0, key="izaak_income_input")
+    if st.form_submit_button("Add Izaak Income"):
+        today = datetime.date.today()
+        add_transaction({
+            "type": "Income",
+            "date": today,
+            "month": today.strftime("%B %Y"),
+            "amount": izaak,
+            "category": "Income",
+            "description": "Izaak CCB",
+            "card": ""
+        })
+        st.sidebar.success(f"₹{izaak} Izaak Income added!")
+
 
 
 st.sidebar.header("Savings")
