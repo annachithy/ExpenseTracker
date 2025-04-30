@@ -343,28 +343,28 @@ if not df.empty:
             with col2:
                 st.write(f"Card: {row['card']}")
             with col3:
-                if st.button(f"✏️ Edit {row['id']}_editdate"):
-                    st.session_state[f"edit_mode_{row['id']}_editdate"] = True
+                if st.button(f"✏️ Edit {row['id']}"):
+                    st.session_state[f"edit_mode_{row['id']}"] = True
             with col4:
-                if st.button(f"🗑️ Delete {row['id']}_editdate"):
+                if st.button(f"🗑️ Delete {row['id']}"):
                     delete_transaction(row['id'])
                     st.success("Transaction Deleted!")
                     st.rerun()
 
-            if st.session_state.get(f"edit_mode_{row['id']}_editdate", False):
-                with st.form(f"edit_form_{row['id']}_editdate"):
-                    new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_{row['id']}_editdate")
-                    new_desc = st.text_input("New Description", value=row['description'], key=f"desc_{row['id']}_editdate")
+            if st.session_state.get(f"edit_mode_{row['id']}", False):
+                with st.form(f"edit_form_{row['id']}"):
+                    new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_{row['id']}")
+                    new_desc = st.text_input("New Description", value=row['description'], key=f"desc_{row['id']}")
                     col_save, col_cancel = st.columns(2)
                     with col_save:
                         if st.form_submit_button("Update"):
                             update_transaction(row['id'], new_amt, new_desc)
                             st.success("Transaction Updated!")
-                            st.session_state[f"edit_mode_{row['id']}_editdate"] = False
+                            st.session_state[f"edit_mode_{row['id']}"] = False
                             st.rerun()
                     with col_cancel:
                         if st.form_submit_button("Cancel"):
-                            st.session_state[f"edit_mode_{row['id']}_editdate"] = False
+                            st.session_state[f"edit_mode_{row['id']}"] = False
                             st.rerun()
     else:
         st.warning("No transactions found on this date.")
