@@ -34,7 +34,7 @@ def create_tables():
         )
     ''')
     c.execute('INSERT OR IGNORE INTO savings (id, amount) VALUES (1, 0)')
-    for card in ['RBC', 'Rogers', 'CIBC', 'CIBC Costco', 'Walmart', 'Triangle']:
+    for card in ['RBC', 'Rogers', 'CIBC', 'CIBC Costco', 'Walmart', 'Triangle', 'Scotia']:
         c.execute('INSERT OR IGNORE INTO card_limits (card, max_limit) VALUES (?, ?)', (card, 0))
     conn.commit()
     conn.close()
@@ -207,7 +207,7 @@ e_cat = st.sidebar.selectbox("Category", [
 ])
 
 e_desc = st.sidebar.text_input("Expense Description")
-e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle"])
+e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"])
 e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
 if st.sidebar.button("Add Expense"):
@@ -223,7 +223,7 @@ if st.sidebar.button("Add Expense"):
     st.sidebar.success("Expense added.")
 
 st.sidebar.header("Credit Card Repayment")
-rep_card = st.sidebar.selectbox("Repayment Card", ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle"])
+rep_card = st.sidebar.selectbox("Repayment Card", ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"])
 rep_amt = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=1.0)
 if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
