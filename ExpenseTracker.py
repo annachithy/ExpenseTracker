@@ -192,10 +192,16 @@ if st.sidebar.button("Add Savings"):
     update_savings(add_save)
     st.sidebar.success("Savings updated.")
 
-set_save = st.sidebar.number_input("Set Total Savings", min_value=0.0, step=1.0)
-if st.sidebar.button("Set Savings"):
-    set_savings(set_save)
-    st.sidebar.success("Savings manually set.")
+with st.sidebar.form("set_savings_form"):
+    set_save = st.number_input("Set Total Savings", min_value=0.0, step=1.0, key="set_savings_input")
+    if st.form_submit_button("Set Savings"):
+        current = get_savings()
+        if current > 0:
+            st.warning(f"You already have ₹{current:.2f} in savings. Cannot overwrite.")
+        else:
+            set_savings(set_save)
+            st.success(f"Savings set to ₹{set_save:,.2f}")
+
 
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
