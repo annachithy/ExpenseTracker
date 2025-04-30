@@ -342,10 +342,10 @@ if not df.empty:
             with col2:
                 st.write(f"Card: {row['card']}")
             with col3:
-                if st.button(f"✏️ Edit {row['id']}_edit"):
+                if st.button("✏️ Edit", key=f"edit_button_{row['id']}"):
                     st.session_state[f"edit_mode_{row['id']}_edit"] = True
             with col4:
-                if st.button(f"🗑️ Delete {row['id']}_edit"):
+                if st.button("🗑️ Delete", key=f"delete_button_{row['id']}"):
                     delete_transaction(row['id'])
                     st.success("Transaction Deleted!")
                     st.rerun()
