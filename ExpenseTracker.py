@@ -306,8 +306,8 @@ if not df.empty:
 
         if st.session_state.get(f"edit_mode_{row['id']}", False):
             with st.form(f"edit_form_{row['id']}"):
-                 new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_history_{row['id']}")
-                 new_desc = st.text_input("New Description", value=row['description'], key=f"desc_history_{row['id']}")
+                new_amt = st.number_input("New Amount", value=row['amount'], key=f"amt_history_{row['id']}")
+                new_desc = st.text_input("New Description", value=row['description'], key=f"desc_history_{row['id']}")
                 col_save, col_cancel = st.columns(2)
                 with col_save:
                     if st.form_submit_button("Update"):
