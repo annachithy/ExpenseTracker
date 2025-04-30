@@ -189,7 +189,7 @@ with st.sidebar.form("izaak_form"):
 st.sidebar.header("Savings")
 
 add_save = st.sidebar.number_input("Add to Savings", min_value=0.0, step=1.0)
- if st.sidebar.button("Add Savings"):
+if st.sidebar.button("Add Savings"):
      update_savings(add_save)
      st.sidebar.success("Savings updated.")
  
