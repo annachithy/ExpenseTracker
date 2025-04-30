@@ -200,9 +200,12 @@ if st.sidebar.button("Set Savings"):
 
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
-e_cat = st.sidebar.selectbox("Category", ["Food", "Grocery", "Rent", "Utilities", "Education",
-                                          "Transportation", "Medical", "Entertainment", "Insurance",
-                                          "Investments", "Shopping", "Miscellaneous"])
+e_cat = st.sidebar.selectbox("Category", [
+    "🧒 Day Care", "🎓 Education", "🎮 Entertainment", "🍽️ Food", "🛒 Grocery",
+    "🛡️ Insurance", "📈 Investments", "🏥 Medical", "🧾 Miscellaneous",
+    "🏠 Rent", "🛍️ Shopping", "🚌 Transportation", "💡 Utilities"
+])
+
 e_desc = st.sidebar.text_input("Expense Description")
 e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle"])
 e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
