@@ -299,19 +299,20 @@ if st.sidebar.button("Add Credit Card") and new_card.strip():
 
 DEFAULT_CARDS = ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"]
 # -----------------------------
-# Remove Credit Card (if not default)
+# Remove Credit Card (any card)
 # -----------------------------
-all_cards = get_card_limits()["card"].tolist()
-removable_cards = [c for c in all_cards if c not in DEFAULT_CARDS]
+st.sidebar.markdown("### ➖ Remove Credit Card")
 
-if removable_cards:
-    st.sidebar.markdown("### ➖ Remove Credit Card")
+all_cards = get_card_limits()["card"].tolist()
+
+if all_cards:
     card_to_remove = st.sidebar.selectbox(
-        "Select a custom card to remove",
-        ["-- Select card --"] + removable_cards,
+        "Select a card to remove",
+        ["-- Select card --"] + all_cards,
         index=0,
         key="remove_credit_card"
     )
+
     if st.sidebar.button("Remove Selected Card"):
         if card_to_remove != "-- Select card --":
             conn = sqlite3.connect(DB_FILE)
@@ -322,9 +323,10 @@ if removable_cards:
             st.sidebar.success(f"❌ Removed card: {card_to_remove}")
             st.rerun()
         else:
-            st.sidebar.warning("Please select a valid card to remove.")
+            st.sidebar.warning("Please select a card to remove.")
 else:
-    st.sidebar.info("No custom cards to remove.")
+    st.sidebar.info("No cards available to remove.")
+
 
 
 # -----------------------------
