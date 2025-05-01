@@ -213,11 +213,31 @@ st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
 e_cat = st.sidebar.selectbox("Category", st.session_state.categories)
 
-new_cat = st.sidebar.text_input("Add Custom Category")
+
+
+# Sort categories alphabetically before displaying
+st.session_state.categories = sorted(st.session_state.categories)
+
+# Expense Category Selector
+e_cat = st.sidebar.selectbox("Category", st.session_state.categories)
+
+# Add New Category
+new_cat = st.sidebar.text_input("➕ Add Custom Category")
 if st.sidebar.button("Add Category") and new_cat.strip():
-    if new_cat.strip() not in st.session_state.categories:
-        st.session_state.categories.append(new_cat.strip())
-        st.sidebar.success(f"Added category: {new_cat.strip()}")
+    cat_to_add = new_cat.strip()
+    if cat_to_add not in st.session_state.categories:
+        st.session_state.categories.append(cat_to_add)
+        st.sidebar.success(f"✅ Added: {cat_to_add}")
+    else:
+        st.sidebar.warning("Category already exists.")
+
+# Remove Category
+remove_cat = st.sidebar.selectbox("➖ Remove Category", st.session_state.categories)
+if st.sidebar.button("Remove Selected Category"):
+    if remove_cat in st.session_state.categories:
+        st.session_state.categories.remove(remove_cat)
+        st.sidebar.success(f"❌ Removed: {remove_cat}")
+
 
 
 e_desc = st.sidebar.text_area("Notes / Tags (optional)")
@@ -472,6 +492,30 @@ with st.form("add_to_goal_form"):
         st.success(f"Added ₹{add_goal_amt:.2f} to {goal_name}")
         st.rerun()
 
+
+st.subheader("Vacation to Kerala")
+
+# Hardcoded goal
+goal_name = "Naattil Pokan Paisa"
+goal_target = 10000
+
+# Store progress if not already
+if "goal_progress" not in st.session_state:
+    st.session_state.goal_progress = 0.0
+
+# Show current progress
+st.write(f"🎯 Goal: {goal_name}")
+st.write(f"💰 Target: ₹{goal_target:,}")
+st.write(f"✅ Collected: ₹{st.session_state.goal_progress:,}")
+st.progress(min(st.session_state.goal_progress / goal_target, 1.0))
+
+# Add contribution form
+with st.form("add_to_goal_form"):
+    add_goal_amt = st.number_input("Add to Goal", min_value=0.0, step=100.0)
+    if st.form_submit_button("Add"):
+        st.session_state.goal_progress += add_goal_amt
+        st.success(f"Added ₹{add_goal_amt:.2f} to {goal_name}")
+        st.rerun()
 
 
 # -----------------------------
