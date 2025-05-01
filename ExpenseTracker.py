@@ -256,6 +256,9 @@ if st.sidebar.button("Add Repayment"):
 # Dashboard Summary (Always Show)
 # -----------------------------
 st.subheader("Dashboard Summary")
+# Get data BEFORE using df
+df = get_transactions()
+savings_total = get_savings()
 
 # Safely calculate totals
 income_total = df[df["type"] == "Income"]["amount"].sum() if not df.empty else 0
