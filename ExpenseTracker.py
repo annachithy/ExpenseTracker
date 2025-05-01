@@ -253,46 +253,49 @@ if st.sidebar.button("Add Repayment"):
     st.sidebar.success("Repayment added.")
 
 # -----------------------------
-# Dashboard Summary
+# Dashboard Summary (Always Show)
 # -----------------------------
-df = get_transactions()
-savings_total = get_savings()
+st.subheader("Dashboard Summary")
 
-if not df.empty or savings_total > 0:
-    income_total = df[df["type"] == "Income"]["amount"].sum()
-    expense_total = df[df["type"] == "Expense"]["amount"].sum()
-    balance = income_total - expense_total
+# Safely calculate totals
+income_total = df[df["type"] == "Income"]["amount"].sum() if not df.empty else 0
+expense_total = df[df["type"] == "Expense"]["amount"].sum() if not df.empty else 0
+balance = income_total - expense_total
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Income", f"₹{income_total:,.2f}")
-    col2.metric("Total Expenses", f"₹{expense_total:,.2f}")
-    col3.metric("Total Savings", f"₹{savings_total:,.2f}")
-    col4.metric("Remaining Balance", f"₹{balance:,.2f}")
+# Show summary metrics
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Income", f"₹{income_total:,.2f}")
+col2.metric("Total Expenses", f"₹{expense_total:,.2f}")
+col3.metric("Total Savings", f"₹{savings_total:,.2f}")
+col4.metric("Remaining Balance", f"₹{balance:,.2f}")
 
-
-
-    st.subheader("Expenses by Category (Pie Chart)")
+# Pie Chart of Expenses
+st.subheader("Expenses by Category (Pie Chart)")
+if not df.empty:
     chart = df[df["type"] == "Expense"].groupby("category")["amount"].sum()
     if not chart.empty:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            fig, ax = plt.subplots(figsize=(4, 4))   # smaller size
+            fig, ax = plt.subplots(figsize=(4, 4))
             chart.plot.pie(autopct='%1.1f%%', ax=ax)
-            plt.ylabel("")  # Remove ylabel
-            plt.tight_layout()  # Reduce extra space
+            plt.ylabel("")
+            plt.tight_layout()
             st.pyplot(fig, bbox_inches='tight')
     else:
         st.info("No expenses yet to plot.")
-     
-     
-    st.subheader("Recurring Expenses Reminder")
-    recurring = {
-        "🏠 Rent": "1st of every month",
-        "💡 Utilities": "5th of every month",
-        "🛡️ Insurance": "15th every month"
-    }
-    for cat, due in recurring.items():
-        st.write(f"🔁 {cat} → Due: {due}")
+else:
+    st.info("No transactions to display.")
+
+# Recurring Expenses Reminder
+st.subheader("Recurring Expenses Reminder")
+recurring = {
+    "🏠 Rent": "1st of every month",
+    "💡 Utilities": "5th of every month",
+    "🛡️ Insurance": "15th every month"
+}
+for cat, due in recurring.items():
+    st.write(f"🔁 {cat} → Due: {due}")
+
         
 # -----------------------------
 # Monthly Report Section
@@ -426,17 +429,6 @@ if not df_filtered.empty:
     st.dataframe(df_filtered)
 else:
     st.info("No transactions in this category.")
-
-
-
-
-st.subheader("Savings Goal Tracker")
-goal = st.number_input("Set Your Goal (₹)", min_value=0.0, step=100.0, value=50000.0)
-current = get_savings()
-progress = min(current / goal, 1.0)
-st.progress(progress)
-st.write(f"💰 Saved ₹{current:,.0f} of ₹{goal:,.0f}")
-
 
 
 
