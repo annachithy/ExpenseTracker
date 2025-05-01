@@ -271,7 +271,7 @@ if st.sidebar.button("Add Repayment"):
     add_transaction({
         "type": "Repayment",
         "date": today,
-        "month": today.strftime("%B %Y"),or card in ['RBC', 'Roge
+        "month": today.strftime("%B %Y"),
         "amount": rep_amt,
         "category": "Repayment",
         "description": f"Repayment to {rep_card}",
