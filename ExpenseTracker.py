@@ -470,52 +470,45 @@ else:
 
 st.subheader("Gold Tracker Amount")
 
-# Hardcoded goal
 goal_name = "Gold Loan"
 goal_target = 18500
 
-# Store progress if not already
-if "goal_progress" not in st.session_state:
-    st.session_state.goal_progress = 0.0
+if "goal_progress_gold" not in st.session_state:
+    st.session_state.goal_progress_gold = 0.0
 
-# Show current progress
 st.write(f"🎯 Goal: {goal_name}")
 st.write(f"💰 Target: ₹{goal_target:,}")
-st.write(f"✅ Collected: ₹{st.session_state.goal_progress:,}")
-st.progress(min(st.session_state.goal_progress / goal_target, 1.0))
+st.write(f"✅ Collected: ₹{st.session_state.goal_progress_gold:,}")
+st.progress(min(st.session_state.goal_progress_gold / goal_target, 1.0))
 
-# Add contribution form
-with st.form("add_to_goal_form"):
-    add_goal_amt = st.number_input("Add to Goal", min_value=0.0, step=100.0)
+with st.form("add_to_goal_form_gold"):
+    add_goal_amt = st.number_input("Add to Gold Loan Goal", min_value=0.0, step=100.0)
     if st.form_submit_button("Add"):
-        st.session_state.goal_progress += add_goal_amt
+        st.session_state.goal_progress_gold += add_goal_amt
         st.success(f"Added ₹{add_goal_amt:.2f} to {goal_name}")
         st.rerun()
 
 
 st.subheader("Vacation to Kerala")
 
-# Hardcoded goal
 goal_name = "Naattil Pokan Paisa"
 goal_target = 10000
 
-# Store progress if not already
-if "goal_progress" not in st.session_state:
-    st.session_state.goal_progress = 0.0
+if "goal_progress_kerala" not in st.session_state:
+    st.session_state.goal_progress_kerala = 0.0
 
-# Show current progress
 st.write(f"🎯 Goal: {goal_name}")
 st.write(f"💰 Target: ₹{goal_target:,}")
-st.write(f"✅ Collected: ₹{st.session_state.goal_progress:,}")
-st.progress(min(st.session_state.goal_progress / goal_target, 1.0))
+st.write(f"✅ Collected: ₹{st.session_state.goal_progress_kerala:,}")
+st.progress(min(st.session_state.goal_progress_kerala / goal_target, 1.0))
 
-# Add contribution form
-with st.form("add_to_goal_form"):
-    add_goal_amt = st.number_input("Add to Goal", min_value=0.0, step=100.0)
+with st.form("add_to_goal_form_kerala"):
+    add_goal_amt = st.number_input("Add to Kerala Goal", min_value=0.0, step=100.0)
     if st.form_submit_button("Add"):
-        st.session_state.goal_progress += add_goal_amt
+        st.session_state.goal_progress_kerala += add_goal_amt
         st.success(f"Added ₹{add_goal_amt:.2f} to {goal_name}")
         st.rerun()
+
 
 
 # -----------------------------
