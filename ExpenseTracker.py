@@ -464,7 +464,7 @@ if "goal_progress" not in st.session_state:
     st.session_state.goal_progress = 0.0
 
 # Show current progress
-st.write(f"🎯 Goal: {Gold_Tracker}")
+st.write(f"🎯 Goal: {goal_name}")
 st.write(f"💰 Target: ₹{goal_target:,}")
 st.write(f"✅ Collected: ₹{st.session_state.goal_progress:,}")
 st.progress(min(st.session_state.goal_progress / goal_target, 1.0))
