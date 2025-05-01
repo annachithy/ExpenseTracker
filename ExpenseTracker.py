@@ -281,7 +281,7 @@ if not df.empty or savings_total > 0:
             plt.ylabel("")  # Remove ylabel
             plt.tight_layout()  # Reduce extra space
             st.pyplot(fig, bbox_inches='tight')
-     else:
+    else:
         st.info("No expenses yet to plot.")
      
      
