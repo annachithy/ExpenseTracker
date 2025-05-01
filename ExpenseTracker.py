@@ -108,6 +108,17 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "show_reminder" not in st.session_state:
     st.session_state.show_reminder = True
+    
+# Initialize default and custom categories
+default_categories = [
+    "🧒 Day Care", "🎓 Education", "🎮 Entertainment", "🍽️ Food", "🛒 Grocery",
+    "🛡️ Insurance", "📈 Investments", "🏥 Medical", "🧾 Miscellaneous",
+    "🏠 Rent", "🛍️ Shopping", "🚌 Transportation", "💡 Utilities"
+]
+
+if "categories" not in st.session_state:
+    st.session_state.categories = default_categories.copy()
+
 
 if not st.session_state.logged_in:
     st.title("Login to Expense Tracker")
@@ -200,13 +211,16 @@ if st.sidebar.button("Set Savings"):
 
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
-e_cat = st.sidebar.selectbox("Category", [
-    "🧒 Day Care", "🎓 Education", "🎮 Entertainment", "🍽️ Food", "🛒 Grocery",
-    "🛡️ Insurance", "📈 Investments", "🏥 Medical", "🧾 Miscellaneous",
-    "🏠 Rent", "🛍️ Shopping", "🚌 Transportation", "💡 Utilities"
-])
+e_cat = st.sidebar.selectbox("Category", st.session_state.categories)
 
-e_desc = st.sidebar.text_input("Expense Description")
+new_cat = st.sidebar.text_input("Add Custom Category")
+if st.sidebar.button("Add Category") and new_cat.strip():
+    if new_cat.strip() not in st.session_state.categories:
+        st.session_state.categories.append(new_cat.strip())
+        st.sidebar.success(f"Added category: {new_cat.strip()}")
+
+
+e_desc = st.sidebar.text_area("Notes / Tags (optional)")
 e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"])
 e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
@@ -267,10 +281,18 @@ if not df.empty or savings_total > 0:
             plt.ylabel("")  # Remove ylabel
             plt.tight_layout()  # Reduce extra space
             st.pyplot(fig, bbox_inches='tight')
-
-
-    else:
+     else:
         st.info("No expenses yet to plot.")
+     
+     
+    st.subheader("Recurring Expenses Reminder")
+    recurring = {
+        "🏠 Rent": "1st of every month",
+        "💡 Utilities": "5th of every month",
+        "🛡️ Insurance": "15th every month"
+    }
+    for cat, due in recurring.items():
+        st.write(f"🔁 {cat} → Due: {due}")
         
 # -----------------------------
 # Monthly Report Section
@@ -382,6 +404,80 @@ for _, row in card_limits.iterrows():
         st.write(f"**Available Credit:** ₹{available:.2f}")
         if limit > 0:
             st.progress(min(spent/limit, 1.0))
+            
+
+
+
+st.subheader("Search Transactions")
+search_term = st.text_input("Search description, category, or card")
+
+if search_term:
+    df_search = df[df.apply(lambda row: search_term.lower() in str(row).lower(), axis=1)]
+    if not df_search.empty:
+        st.dataframe(df_search)
+    else:
+        st.warning("No matching transactions found.")
+
+st.subheader("Filter by Category")
+selected_cat = st.selectbox("Choose Category", sorted(set(df["category"])))
+
+df_filtered = df[df["category"] == selected_cat]
+if not df_filtered.empty:
+    st.dataframe(df_filtered)
+else:
+    st.info("No transactions in this category.")
+
+
+
+
+st.subheader("Savings Goal Tracker")
+goal = st.number_input("Set Your Goal (₹)", min_value=0.0, step=100.0, value=50000.0)
+current = get_savings()
+progress = min(current / goal, 1.0)
+st.progress(progress)
+st.write(f"💰 Saved ₹{current:,.0f} of ₹{goal:,.0f}")
+
+
+
+
+st.subheader("Income vs Expense Ratio")
+income_total = df[df["type"] == "Income"]["amount"].sum()
+expense_total = df[df["type"] == "Expense"]["amount"].sum()
+
+if income_total > 0:
+    ratio = (income_total - expense_total) / income_total
+    st.write(f"🧮 You're saving {ratio*100:.2f}% of your income.")
+else:
+    st.warning("No income recorded yet.")
+
+
+
+
+st.subheader("Gold Tracker Amount")
+
+# Hardcoded goal
+goal_name = "Gold Loan"
+goal_target = 18500
+
+# Store progress if not already
+if "goal_progress" not in st.session_state:
+    st.session_state.goal_progress = 0.0
+
+# Show current progress
+st.write(f"🎯 Goal: {Gold Tracker}")
+st.write(f"💰 Target: ₹{goal_target:,}")
+st.write(f"✅ Collected: ₹{st.session_state.goal_progress:,}")
+st.progress(min(st.session_state.goal_progress / goal_target, 1.0))
+
+# Add contribution form
+with st.form("add_to_goal_form"):
+    add_goal_amt = st.number_input("Add to Goal", min_value=0.0, step=100.0)
+    if st.form_submit_button("Add"):
+        st.session_state.goal_progress += add_goal_amt
+        st.success(f"Added ₹{add_goal_amt:.2f} to {goal_name}")
+        st.rerun()
+
+
 
 # -----------------------------
 # Soft Reset
