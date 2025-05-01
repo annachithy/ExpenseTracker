@@ -211,20 +211,18 @@ if st.sidebar.button("Set Savings"):
 
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
-e_cat = st.sidebar.selectbox("Category", st.session_state.categories)
-
 
 
 # Sort categories alphabetically before displaying
 st.session_state.categories = sorted(st.session_state.categories)
 
-# Expense Category Selector
+# Expense Category Selector (for adding expense)
 e_cat = st.sidebar.selectbox("Category", st.session_state.categories, key="category_select")
 
-
-# Add New Category
-new_cat = st.sidebar.text_input("➕ Add Custom Category")
-if st.sidebar.button("Add Category") and new_cat.strip():
+# ➕ Add Custom Category
+st.sidebar.markdown("### ➕ Add Custom Category")
+new_cat = st.sidebar.text_input("Add Category", key="new_category_input")
+if st.sidebar.button("Add Category", key="add_category_btn") and new_cat.strip():
     cat_to_add = new_cat.strip()
     if cat_to_add not in st.session_state.categories:
         st.session_state.categories.append(cat_to_add)
@@ -232,12 +230,20 @@ if st.sidebar.button("Add Category") and new_cat.strip():
     else:
         st.sidebar.warning("Category already exists.")
 
-# Remove Category
-remove_cat = st.sidebar.selectbox("➖ Remove Category", st.session_state.categories, key="remove_category")
-if st.sidebar.button("Remove Selected Category"):
-    if remove_cat in st.session_state.categories:
+# ➖ Remove Category
+st.sidebar.markdown("### ➖ Remove Category")
+remove_cat = st.sidebar.selectbox(
+    "Select category to remove",
+    ["-- Select a category to remove --"] + st.session_state.categories,
+    index=0,
+    key="remove_category"
+)
+if st.sidebar.button("Remove Selected Category", key="remove_category_btn"):
+    if remove_cat != "-- Select a category to remove --":
         st.session_state.categories.remove(remove_cat)
         st.sidebar.success(f"❌ Removed: {remove_cat}")
+    else:
+        st.sidebar.warning("Please select a valid category.")
 
 
 
