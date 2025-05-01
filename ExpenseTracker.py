@@ -248,7 +248,7 @@ if st.sidebar.button("Remove Selected Category", key="remove_category_btn"):
 
 
 e_desc = st.sidebar.text_area("Notes / Tags (optional)")
-e_card = st.sidebar.selectbox("Paid using Card?", ["None", "RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"])
+e_card = st.sidebar.selectbox("Paid using Card?", ["None"] + get_card_limits()["card"].tolist())
 e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
 if st.sidebar.button("Add Expense"):
@@ -264,20 +264,68 @@ if st.sidebar.button("Add Expense"):
     st.sidebar.success("Expense added.")
 
 st.sidebar.header("Credit Card Repayment")
-rep_card = st.sidebar.selectbox("Repayment Card", ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"])
+rep_card = st.sidebar.selectbox("Repayment Card", get_card_limits()["card"].tolist())
 rep_amt = st.sidebar.number_input("Repayment Amount", min_value=0.0, step=1.0)
 if st.sidebar.button("Add Repayment"):
     today = datetime.date.today()
     add_transaction({
         "type": "Repayment",
         "date": today,
-        "month": today.strftime("%B %Y"),
+        "month": today.strftime("%B %Y"),or card in ['RBC', 'Roge
         "amount": rep_amt,
         "category": "Repayment",
         "description": f"Repayment to {rep_card}",
         "card": rep_card
     })
     st.sidebar.success("Repayment added.")
+
+
+st.sidebar.header("Manage Credit Cards")
+
+new_card = st.sidebar.text_input("Add New Credit Card")
+if st.sidebar.button("Add Credit Card") and new_card.strip():
+    card_name = new_card.strip()
+    existing_cards = [c.strip().lower() for c in get_card_limits()["card"].tolist()]
+    if card_name.lower() in existing_cards:
+        st.sidebar.warning("Card already exists.")
+    else:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("INSERT OR IGNORE INTO card_limits (card, max_limit) VALUES (?, ?)", (card_name, 0))
+        conn.commit()
+        conn.close()
+        st.sidebar.success(f"✅ Card '{card_name}' added!")
+        st.rerun()
+
+DEFAULT_CARDS = ["RBC", "Rogers", "CIBC", "CIBC Costco", "Walmart", "Triangle", "Scotia"]
+# -----------------------------
+# Remove Credit Card (if not default)
+# -----------------------------
+all_cards = get_card_limits()["card"].tolist()
+removable_cards = [c for c in all_cards if c not in DEFAULT_CARDS]
+
+if removable_cards:
+    st.sidebar.markdown("### ➖ Remove Credit Card")
+    card_to_remove = st.sidebar.selectbox(
+        "Select a custom card to remove",
+        ["-- Select card --"] + removable_cards,
+        index=0,
+        key="remove_credit_card"
+    )
+    if st.sidebar.button("Remove Selected Card"):
+        if card_to_remove != "-- Select card --":
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
+            c.execute("DELETE FROM card_limits WHERE card = ?", (card_to_remove,))
+            conn.commit()
+            conn.close()
+            st.sidebar.success(f"❌ Removed card: {card_to_remove}")
+            st.rerun()
+        else:
+            st.sidebar.warning("Please select a valid card to remove.")
+else:
+    st.sidebar.info("No custom cards to remove.")
+
 
 # -----------------------------
 # Dashboard Summary (Always Show)
