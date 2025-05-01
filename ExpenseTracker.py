@@ -219,7 +219,8 @@ e_cat = st.sidebar.selectbox("Category", st.session_state.categories)
 st.session_state.categories = sorted(st.session_state.categories)
 
 # Expense Category Selector
-e_cat = st.sidebar.selectbox("Category", st.session_state.categories)
+e_cat = st.sidebar.selectbox("Category", st.session_state.categories, key="category_select")
+
 
 # Add New Category
 new_cat = st.sidebar.text_input("➕ Add Custom Category")
@@ -232,7 +233,7 @@ if st.sidebar.button("Add Category") and new_cat.strip():
         st.sidebar.warning("Category already exists.")
 
 # Remove Category
-remove_cat = st.sidebar.selectbox("➖ Remove Category", st.session_state.categories)
+remove_cat = st.sidebar.selectbox("➖ Remove Category", st.session_state.categories, key="remove_category")
 if st.sidebar.button("Remove Selected Category"):
     if remove_cat in st.session_state.categories:
         st.session_state.categories.remove(remove_cat)
