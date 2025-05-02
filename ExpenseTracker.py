@@ -212,6 +212,21 @@ if st.sidebar.button("Set Savings"):
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
 
+e_desc = st.sidebar.text_area("Notes / Tags (optional)")
+e_card = st.sidebar.selectbox("Paid using Card?", ["None"] + get_card_limits()["card"].tolist())
+e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
+
+if st.sidebar.button("Add Expense"):
+    add_transaction({
+        "type": "Expense",
+        "date": e_date,
+        "month": e_date.strftime("%B %Y"),
+        "amount": e_amt,
+        "category": e_cat,
+        "description": e_desc,
+        "card": e_card if e_card != "None" else ""
+    })
+    st.sidebar.success("Expense added.")
 
 # -----------------------------
 # Category Management (sorted + safe)
@@ -251,21 +266,7 @@ if st.sidebar.button("Remove Selected Category", key="remove_category_btn"):
         st.sidebar.warning("Please select a valid category.")
 
 
-e_desc = st.sidebar.text_area("Notes / Tags (optional)")
-e_card = st.sidebar.selectbox("Paid using Card?", ["None"] + get_card_limits()["card"].tolist())
-e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
 
-if st.sidebar.button("Add Expense"):
-    add_transaction({
-        "type": "Expense",
-        "date": e_date,
-        "month": e_date.strftime("%B %Y"),
-        "amount": e_amt,
-        "category": e_cat,
-        "description": e_desc,
-        "card": e_card if e_card != "None" else ""
-    })
-    st.sidebar.success("Expense added.")
 
 st.sidebar.header("Credit Card Repayment")
 rep_card = st.sidebar.selectbox("Repayment Card", get_card_limits()["card"].tolist())
