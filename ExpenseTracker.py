@@ -213,13 +213,17 @@ st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
 
 
-# Sort categories alphabetically before displaying
+# -----------------------------
+# Category Management (sorted + safe)
+# -----------------------------
+# Ensure categories are sorted
 st.session_state.categories = sorted(st.session_state.categories)
 
-# Expense Category Selector (for adding expense)
-e_cat = st.sidebar.selectbox("Category", st.session_state.categories, key="category_select")
+# Select category with no default selected
+category_options = ["-- Select Category --"] + st.session_state.categories
+e_cat = st.sidebar.selectbox("Category", category_options, index=0, key="category_select")
 
-# ➕ Add Custom Category
+# Add Custom Category
 st.sidebar.markdown("### ➕ Add Custom Category")
 new_cat = st.sidebar.text_input("Add Category", key="new_category_input")
 if st.sidebar.button("Add Category", key="add_category_btn") and new_cat.strip():
@@ -230,21 +234,21 @@ if st.sidebar.button("Add Category", key="add_category_btn") and new_cat.strip()
     else:
         st.sidebar.warning("Category already exists.")
 
-# ➖ Remove Category
+# Remove Category
 st.sidebar.markdown("### ➖ Remove Category")
 remove_cat = st.sidebar.selectbox(
     "Select category to remove",
-    ["-- Select a category to remove --"] + st.session_state.categories,
+    ["-- Select Category --"] + st.session_state.categories,
     index=0,
     key="remove_category"
 )
 if st.sidebar.button("Remove Selected Category", key="remove_category_btn"):
-    if remove_cat != "-- Select a category to remove --":
+    if remove_cat != "-- Select Category --":
         st.session_state.categories.remove(remove_cat)
         st.sidebar.success(f"❌ Removed: {remove_cat}")
+        st.rerun()
     else:
         st.sidebar.warning("Please select a valid category.")
-
 
 
 e_desc = st.sidebar.text_area("Notes / Tags (optional)")
