@@ -212,6 +212,16 @@ if st.sidebar.button("Set Savings"):
 st.sidebar.header("Add Expense")
 e_amt = st.sidebar.number_input("Expense Amount", min_value=0.0, step=1.0)
 
+# -----------------------------
+# Category Management (sorted + safe)
+# -----------------------------
+# Ensure categories are sorted
+st.session_state.categories = sorted(st.session_state.categories)
+
+# Select category with no default selected
+category_options = ["-- Select Category --"] + st.session_state.categories
+e_cat = st.sidebar.selectbox("Category", category_options, index=0, key="category_select")
+
 e_desc = st.sidebar.text_area("Notes / Tags (optional)")
 e_card = st.sidebar.selectbox("Paid using Card?", ["None"] + get_card_limits()["card"].tolist())
 e_date = st.sidebar.date_input("Expense Date", datetime.date.today())
@@ -228,15 +238,7 @@ if st.sidebar.button("Add Expense"):
     })
     st.sidebar.success("Expense added.")
 
-# -----------------------------
-# Category Management (sorted + safe)
-# -----------------------------
-# Ensure categories are sorted
-st.session_state.categories = sorted(st.session_state.categories)
 
-# Select category with no default selected
-category_options = ["-- Select Category --"] + st.session_state.categories
-e_cat = st.sidebar.selectbox("Category", category_options, index=0, key="category_select")
 
 # Add Custom Category
 st.sidebar.markdown("### ➕ Add Custom Category")
