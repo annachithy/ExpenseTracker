@@ -366,16 +366,6 @@ if not df.empty:
 else:
     st.info("No transactions to display.")
 
-# Recurring Expenses Reminder
-st.subheader("Recurring Expenses Reminder")
-recurring = {
-    "🏠 Rent": "1st of every month",
-    "💡 Utilities": "5th of every month",
-    "🛡️ Insurance": "15th every month"
-}
-for cat, due in recurring.items():
-    st.write(f"🔁 {cat} → Due: {due}")
-
         
 # -----------------------------
 # Monthly Report Section
